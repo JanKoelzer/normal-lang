@@ -1,42 +1,59 @@
+from Parser import Parser
 from Tree import Application, LambdaX, LambdaY, IfStmt, X, Y, Numeral, Sum, Product
 from PiDigitStream import Pi
 import sys
+import re
 
 
 class Interpreter:
     def __init__(self, code, numbers = None):
+        ''' Create an interpreter for the given source code.
+            CODE is an offset in the digit stream (given as chars) provided by NUMBERS.
+            If NUMBERS is omit, use the digits of PI.
+        '''
         self._code = code
         if numbers is None:
             self._numbers = Pi.stream()
         else:
             self._numbers = numbers
+        # _tree has not been set up yet, set to None
         self._tree = None
 
         
     def _read(self):
+        '''
+            Recursively build a tree by reading the digit stream.
+            Returns a tree of nodes defined by Tree.Node.
+            May diverge, if the digits appear inconveniently.
+        '''
+        # Note that productions are ordered sucht that a lot of
+        # "useful" programs occur  among the first possible codes (0, 1, 2, 3, …)
+
+        # Get the next number and map it to a production rule.
+        # Then, _read() recursivly to complete the tree.
         n = int(next(self._numbers))
-        if n == 1:  # DONE
-            return Application(self._read(), self._read())
-        elif n == 2: # DONE
-            return LambdaY(self._read())
-        elif n == 3:
-            return LambdaX(self._read())
-        elif n == 4:
-            return Numeral(1)
-        elif n == 5: # DONE
-            return Numeral(0) # DONE
-        elif n == 6: # DONE
-            return Y
-        elif n == 7:
-            return IfStmt(self._read(), self._read(), self._read())
-        elif n == 8:
-            return Sum(self._read(), self._read())
-        elif n == 9: # DONE
-            return X
-        else:
-            return Product(self._read(), self._read())
+
+        rules = {
+            0: lambda: Product(self._read(), self._read()),
+            1: lambda: Application(self._read(), self._read()),
+            2: lambda: LambdaY(self._read()),
+            3: lambda: LambdaX(self._read()),
+            4: lambda: Numeral(1),
+            5: lambda: Numeral(0),
+            6: lambda: Y,
+            7: lambda: IfStmt(self._read(), self._read(), self._read()),
+            8: lambda: Sum(self._read(), self._read()),
+            9: lambda: X,
+        }
+
+        return rules[n]()
 
     def create_tree(self):
+        '''
+            Convert the source code into tree of nodes (see Tree.Node).
+            Returns a lambda expression with variable x and a body defined by the digit stream, and source, naturally.
+            May diverge, if the digits appear inconveniently.
+        '''
         if self._tree is None:
             # the CODE is just the offset in the stream of digits
             # so skip the first value
@@ -46,8 +63,10 @@ class Interpreter:
             # now parse following digits and surround it by a lambda
             self._tree = LambdaX(self._read())       
         
-
     def run(self, arg: int):
+        '''
+            Run the program defined by the source code passing ARG to it.
+        '''
         if self._tree is None:
             self.create_tree()
 
@@ -56,21 +75,21 @@ class Interpreter:
 
 
 if __name__ == '__main__':
-    try:        
-        code = int(sys.argv[1])
-        print(code)
-    except:
-        raise SyntaxError("Invalid code syntax")         
+    # parse the code
+    code = Parser.parse(sys.argv[1])
 
+    # parse an argument or use default "0"
     try:
         arg = int(sys.argv[2])
     except:        
         arg = 0
 
+    # create an AST
     interpreter = Interpreter(code)
     interpreter.create_tree()
     print(f"{interpreter._tree}")
     
+    # run the interpreter
     res = interpreter.run(arg)
 
     print(f"{interpreter._tree} {arg} => {res}")

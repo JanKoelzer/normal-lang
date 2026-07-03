@@ -5,11 +5,14 @@ import re
 import os
 
 class FileIterator:
-    CHUNK_SIZE = 100
-    def __init__(self, filename: str):
+    '''
+        Read chars from a file. For better performance, use a buffer of size chunk_size.
+    '''
+    def __init__(self, filename: str, chunk_size=100):
         self._filename = filename
         self._file = None
         self._next_chars = deque()
+        self._chunk_size = chunk_size
 
     def __iter__(self):
         return self
@@ -24,7 +27,7 @@ class FileIterator:
                 raise StopIteration
                 
         if not self._next_chars:
-            chunk = self._file.read(self.CHUNK_SIZE)
+            chunk = self._file.read(self._chunk_size)
             if not chunk:   
                 self._file.close()
                 raise StopIteration
@@ -38,6 +41,9 @@ class FileIterator:
 
 
 class SkipIterator:
+    '''
+        Create an Iterator that skips the first n items of another iterator "source".
+    '''
     def __init__(self, source, n):
         self.source = iter(source)
         self.n = n
@@ -58,6 +64,10 @@ class SkipIterator:
 
 
 class MpMathChunkFallback:
+    '''
+        Use MpMath to generate digits of Pi.
+        For better performance, a buffer of size chunk_size can be used.
+    '''
     def __init__(self, start_offset=0, chunk_size=20):
         self.start_offset = start_offset
         self.chunk_size = chunk_size
@@ -91,6 +101,10 @@ class MpMathChunkFallback:
 
 
 class FileThenFallback:
+    '''
+        Combine a finite stream (file_stream) and a fallback that is used after the first
+        stream has been consumed.
+    '''
     def __init__(self, file_stream, fallback_stream):
         self.file = iter(file_stream)
         self.fallback = iter(fallback_stream)
@@ -110,7 +124,12 @@ class FileThenFallback:
 
 class Pi:
     @staticmethod
-    def findFile():
+    def _findFile():
+        '''
+            Find the .txt file that contains the most (precalculated) digits of Pi.
+            File names have the form [1-9][0-9]*.txt and the file name has to be the
+            number of digits.
+        '''
         pattern = re.compile(r"^(\d+)\.txt$")
 
         max_num = None
@@ -130,11 +149,13 @@ class Pi:
 
     @staticmethod
     def stream():
-        max_file, max_num = Pi.findFile()
+        max_file, max_num = Pi._findFile()
         if max_file is None:
+            # start with MpMath, if there is no file
             return MpMathChunkFallback(start_offset=0)
 
         else:
+            # combine pre-calculated digits and on-demand digits.
             stream = FileIterator(max_file)
             stream = SkipIterator(stream, 2)
 
@@ -145,8 +166,10 @@ class Pi:
 
 if __name__ == "__main__":
     stream = Pi.stream()
-    
-    print("3."+"".join([str(next(stream)) for _ in range(int(sys.argv[1])) ]))
+    if len(sys.argv) < 2:
+        print("Please provide the number of digits.")
+    else:
+        print("3."+"".join([str(next(stream)) for _ in range(int(sys.argv[1])) ]))
 
 
 
