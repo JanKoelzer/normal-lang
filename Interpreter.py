@@ -9,7 +9,7 @@ class Interpreter:
     def __init__(self, code, numbers = None):
         ''' Create an interpreter for the given source code.
             CODE is an offset in the digit stream (given as chars) provided by NUMBERS.
-            If NUMBERS is omit, use the digits of PI.
+            If NUMBERS is omitted, use the digits of PI.
         '''
         self._code = code
         if numbers is None:
