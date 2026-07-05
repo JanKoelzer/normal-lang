@@ -33,18 +33,28 @@ class Interpreter:
         # Then, _read() recursivly to complete the tree.
         n = int(next(self._numbers))
 
-        rules = {
-            0: lambda: Product(self._read(), self._read()),
-            1: lambda: Application(self._read(), self._read()),
-            2: lambda: LambdaY(self._read()),
-            3: lambda: LambdaX(self._read()),
-            4: lambda: Numeral(1),
-            5: lambda: Numeral(0),
-            6: lambda: Y,
-            7: lambda: IfStmt(self._read(), self._read(), self._read()),
-            8: lambda: Sum(self._read(), self._read()),
-            9: lambda: X,
-        }
+        rules = [
+            # 0
+            lambda: Application(self._read(), self._read()), 
+            # 1
+            lambda: Numeral(1),
+            # 2
+            lambda: LambdaX(self._read()),
+            # 3
+            lambda: LambdaY(self._read()),
+            # 4
+            lambda: Numeral(0),
+            # 5
+            lambda: X,
+            # 6
+            lambda: Y,
+            # 7
+            lambda: Sum(self._read(), self._read()),
+            # 8
+            lambda: Product(self._read(), self._read()),
+            # 9
+            lambda: IfStmt(self._read(), self._read(), self._read()),
+        ]
 
         return rules[n]()
 
@@ -57,7 +67,7 @@ class Interpreter:
         if self._tree is None:
             # the CODE is just the offset in the stream of digits
             # so skip the first value
-            for _ in range(self._code):
+            for _ in range(self._code - 1):
                 next(self._numbers)
 
             # now parse following digits and surround it by a lambda
@@ -75,22 +85,27 @@ class Interpreter:
 
 
 if __name__ == '__main__':
-    # parse the code
-    code = Parser.parse(sys.argv[1])
-
-    # parse an argument or use default "0"
     try:
+        # parse the code
+        code_str = sys.argv[1]
+        code = Parser.parse(code_str)
+
+        # parse an argument or use default "0"
         arg = int(sys.argv[2])
-    except:        
-        arg = 0
 
-    # create an AST
-    interpreter = Interpreter(code)
-    interpreter.create_tree()
-    print(f"{interpreter._tree}")
-    
-    # run the interpreter
-    res = interpreter.run(arg)
+        # create an AST
+        interpreter = Interpreter(code)
+        interpreter.create_tree()
+        print(f"{interpreter._tree}")
 
-    print(f"{interpreter._tree} {arg} => {res}")
+        # run the interpreter
+        res = interpreter.run(arg)
+
+        print(f"{interpreter._tree} {arg} => {res}")
+    except IndexError as e:
+        print(f"Please provide two integers: your code and your input argument. Usage: Interpreter.py 77 42, where 77 is your code an 42 is the argument.")
+    except SyntaxError as e:
+        print(e, f"Your code was '{code_str}'")
+    except ValueError:
+        print(f"Please provide an integer as input argument. Usage: Interpreter.py 77 42, where 77 is your code an 42 is the argument. Your argument was '{sys.argv[2]}'.")
  
