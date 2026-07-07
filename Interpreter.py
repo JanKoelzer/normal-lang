@@ -96,12 +96,11 @@ if __name__ == '__main__':
         # create an AST
         interpreter = Interpreter(code)
         interpreter.create_tree()
-        print(f"{interpreter._tree}")
 
         # run the interpreter
         res = interpreter.run(arg)
 
-        print(f"{interpreter._tree} {arg} => {res}")
+        print(res)
     except IndexError as e:
         print(f"Please provide two integers: your code and your input argument. Usage: Interpreter.py 77 42, where 77 is your code an 42 is the argument.")
     except SyntaxError as e:
