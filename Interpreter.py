@@ -102,9 +102,9 @@ if __name__ == '__main__':
 
         print(res)
     except IndexError as e:
-        print(f"Please provide two integers: your code and your input argument. Usage: Interpreter.py 77 42, where 77 is your code an 42 is the argument.")
+        print(f"Please provide two integers: your code and your input argument. Usage: python3 Interpreter.py 47 11, where 47 is your code and 11 is the argument.")
     except SyntaxError as e:
         print(e, f"Your code was '{code_str}'")
     except ValueError:
-        print(f"Please provide an integer as input argument. Usage: Interpreter.py 77 42, where 77 is your code an 42 is the argument. Your argument was '{sys.argv[2]}'.")
+        print(f"Please provide an integer as input argument. Usage: python3 Interpreter.py 47 11, where 47 is your code and 11 is the argument. Your argument was '{sys.argv[2]}'.")
  
